@@ -27,24 +27,6 @@ func main() {
 	rsaMarshaler := crypto.NewRSAMarshaler()
 	deviceService := device.NewDeviceService(deviceRepository, rsaGenerator, rsaMarshaler, logger)
 	signature.NewSignatureService(deviceRepository, rsaMarshaler)
-	deviceJson := `{"id": "bc890106-641e-41fc-aed8-b77cca0b42b9", "algorithm": "ECC", "label": "DELETED"}`
-	var deviceRequest device.DeviceRequest
-	if err := json.Unmarshal([]byte(deviceJson), &deviceRequest); err != nil {
-		panic(err)
-	}
-	// deviceService.CreateSignatureDevice(deviceRequest)
-	// Signature
-	// signatureJson := `{"device_id": "bc890106-641e-41fc-aed8-b77cca0b42b9", "data_to_be_signed": "valami"}`
-	// var signatureRequest signature.SignatureRequest
-	// if err := json.Unmarshal([]byte(signatureJson), &signatureRequest); err != nil {
-	// 	panic(err)
-	// }
-
-	// for i := 0; i < 100; i++ {
-	// 	go signatureService.SignData(signatureRequest) // TODO: Give simpler params here, we don't need the whole request struct
-	// }
-	// time.Sleep(1 * time.Second)
-	// fmt.Println(deviceRepository.FindById(deviceRequest.Id))
 
 	mux := http.NewServeMux()
 
