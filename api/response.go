@@ -15,30 +15,6 @@ type ErrorResponse struct {
 	Errors []string `json:"errors"`
 }
 
-// Server manages HTTP requests and dispatches them to the appropriate services.
-type Server struct {
-	listenAddress string
-}
-
-// NewServer is a factory to instantiate a new Server.
-func NewServer(listenAddress string) *Server {
-	return &Server{
-		listenAddress: listenAddress,
-		// TODO: add services / further dependencies here ...
-	}
-}
-
-// Run registers all HandlerFuncs for the existing HTTP routes and starts the Server.
-func (s *Server) Run() error {
-	mux := http.NewServeMux()
-
-	mux.Handle("/api/v0/health", http.HandlerFunc(s.Health))
-
-	// TODO: register further HandlerFuncs here ...
-
-	return http.ListenAndServe(s.listenAddress, mux)
-}
-
 // WriteInternalError writes a default internal error message as an HTTP response.
 func WriteInternalError(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)

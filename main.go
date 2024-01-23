@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
-	"time"
+	"log/slog"
+	"net/http"
+	"os"
 
-	"github.com/fiskaly/coding-challenges/signing-service-challenge/api"
-	"github.com/fiskaly/coding-challenges/signing-service-challenge/domain"
-	"github.com/fiskaly/coding-challenges/signing-service-challenge/persistence/device"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/device"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/health"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/signature"
 )
 
 const (
@@ -17,26 +19,42 @@ const (
 )
 
 func main() {
-	// playground
-	// TODO: Move to handler logic
-	inMemory := persistence.NewInMemory()
-	deviceService := domain.NewDeviceService(inMemory)
+	opts := &slog.HandlerOptions{}
+	handler := slog.NewJSONHandler(os.Stdout, opts)
+	logger := slog.New(handler)
+	deviceRepository := device.NewDeviceRepository()
+	rsaGenerator := crypto.RSAGenerator{}
+	rsaMarshaler := crypto.NewRSAMarshaler()
+	deviceService := device.NewDeviceService(deviceRepository, rsaGenerator, rsaMarshaler, logger)
+	signature.NewSignatureService(deviceRepository, rsaMarshaler)
 	deviceJson := `{"id": "bc890106-641e-41fc-aed8-b77cca0b42b9", "algorithm": "ECC", "label": "DELETED"}`
-	var device api.DeviceRequest
-	if err := json.Unmarshal([]byte(deviceJson), &device); err != nil {
+	var deviceRequest device.DeviceRequest
+	if err := json.Unmarshal([]byte(deviceJson), &deviceRequest); err != nil {
 		panic(err)
 	}
-	go deviceService.CreateSignatureDevice(device)
-	for i := 0; i < 100; i++ {
-		go deviceService.SignData(device)
-	}
-	time.Sleep(1 * time.Second)
-	fmt.Println(inMemory.FindAll())
+	// deviceService.CreateSignatureDevice(deviceRequest)
+	// Signature
+	// signatureJson := `{"device_id": "bc890106-641e-41fc-aed8-b77cca0b42b9", "data_to_be_signed": "valami"}`
+	// var signatureRequest signature.SignatureRequest
+	// if err := json.Unmarshal([]byte(signatureJson), &signatureRequest); err != nil {
+	// 	panic(err)
+	// }
 
-	// do not change
-	server := api.NewServer(ListenAddress)
+	// for i := 0; i < 100; i++ {
+	// 	go signatureService.SignData(signatureRequest) // TODO: Give simpler params here, we don't need the whole request struct
+	// }
+	// time.Sleep(1 * time.Second)
+	// fmt.Println(deviceRepository.FindById(deviceRequest.Id))
 
-	if err := server.Run(); err != nil {
+	mux := http.NewServeMux()
+
+	healthHandler := health.HealthHandler{}
+	deviceHandler := device.NewDeviceHandler(deviceService, logger)
+	mux.Handle("/api/v0/health", &healthHandler)
+	mux.Handle("/api/v1/device", deviceHandler)
+
+	err := http.ListenAndServe(ListenAddress, mux)
+	if err != nil {
 		log.Fatal("Could not start server on ", ListenAddress)
 	}
 }
