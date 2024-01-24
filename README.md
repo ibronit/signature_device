@@ -1,6 +1,6 @@
 # Signature Service
 
-Demo application to create signature devices and sign data with the created signature devices.
+Demo application to create signature devices. With the created signature devices the signature service can also create signatures for the provided data.
 
 ## Prerequisites & Tooling
 
