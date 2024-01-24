@@ -9,19 +9,20 @@ import (
 
 type DeviceService interface {
 	CreateSignatureDevice(uuid uuid.UUID, algorithm Algorithm, label string) (uuid.UUID, error)
+	GetAllDevices() map[uuid.UUID]DeviceEntity
 }
 
 type deviceService struct {
 	repository      DeviceRepository
-	generatorGetter fiskalycrypto.GeneratorGetter
-	marshalerGetter fiskalycrypto.MarshalerGetter
+	generatorGetter *fiskalycrypto.GeneratorGetter
+	marshalerGetter *fiskalycrypto.MarshalerGetter
 	logger          *slog.Logger
 }
 
 func NewDeviceService(
 	repository DeviceRepository,
-	generatorGetter fiskalycrypto.GeneratorGetter,
-	marshalerGetter fiskalycrypto.MarshalerGetter,
+	generatorGetter *fiskalycrypto.GeneratorGetter,
+	marshalerGetter *fiskalycrypto.MarshalerGetter,
 	logger *slog.Logger) DeviceService {
 	return &deviceService{
 		repository:      repository,
@@ -31,6 +32,7 @@ func NewDeviceService(
 	}
 }
 
+// Creates signature device and saves the signature device into memory
 func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm Algorithm, label string) (uuid.UUID, error) {
 	entity := DeviceEntity{
 		Uuid:      uuid,
@@ -74,4 +76,9 @@ func (ds *deviceService) generateKeyPairByAlgorithm(algorithm Algorithm) ([]byte
 	}
 
 	return publicKey, privateKey, nil
+}
+
+// Gets every previously saved signature devices.
+func (ds *deviceService) GetAllDevices() map[uuid.UUID]DeviceEntity {
+	return ds.repository.FindAll()
 }

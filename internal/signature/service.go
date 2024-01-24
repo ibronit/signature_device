@@ -9,25 +9,27 @@ import (
 	"github.com/google/uuid"
 )
 
+// Signature service covers the business logic of signatures
 type SignatureService interface {
 	SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error)
 }
 
 type signatureService struct {
 	deviceRepository device.DeviceRepository
-	marshalerGetter  fiskalycrypto.MarshalerGetter
-	signerGetter     fiskalycrypto.SignerGetter
+	marshalerGetter  *fiskalycrypto.MarshalerGetter
+	signerGetter     *fiskalycrypto.SignerGetter
 	logger           *slog.Logger
 }
 
 func NewSignatureService(
 	deviceRepository device.DeviceRepository,
-	marshalerGetter fiskalycrypto.MarshalerGetter,
-	signerGetter fiskalycrypto.SignerGetter,
+	marshalerGetter *fiskalycrypto.MarshalerGetter,
+	signerGetter *fiskalycrypto.SignerGetter,
 	logger *slog.Logger) SignatureService {
 	return &signatureService{deviceRepository: deviceRepository, marshalerGetter: marshalerGetter, signerGetter: signerGetter, logger: logger}
 }
 
+// Signs data with the provided signature device.
 func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error) {
 	device, err := ss.deviceRepository.FindById(deviceId)
 	if err != nil {
@@ -47,7 +49,7 @@ func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) 
 		return device, "", "", err
 	}
 
-	signer, err := ss.signerGetter.GetSignatureByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
+	signer, err := ss.signerGetter.GetSignerByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
 	if err != nil {
 		ss.logger.Error("Couldn't get the right marshaler", "error", err)
 		return device, "", "", err
@@ -79,19 +81,3 @@ func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) 
 
 	return updatedDevice, lastSignature, base64Signature, nil
 }
-
-// func (ss *signatureService) createSignature(msg []byte, privateKey *rsa.PrivateKey) []byte {
-// 	msgHash := sha256.New()
-// 	_, err := msgHash.Write(msg)
-// 	if err != nil {
-// 		panic(err) // TODO: error handling
-// 	}
-// 	msgHashSum := msgHash.Sum(nil)
-
-// 	signature, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, msgHashSum, nil)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	return signature
-// }

@@ -8,14 +8,23 @@ type Marshaler interface {
 	Unmarshal(privateKeyBytes []byte) (interface{}, error)
 }
 
-type MarshalerGetter struct {}
+// Stores multiple implementations of the Marshaler interface.
+type MarshalerGetter struct {
+	rsaMarshaler Marshaler
+	eccMarshaler Marshaler
+}
 
+func NewMarshalerGetter() *MarshalerGetter {
+	return &MarshalerGetter{rsaMarshaler: NewRSAMarshaler(), eccMarshaler: NewECCMarshaler()}
+}
+
+// Gets the correct marshaler if it's supported.
 func (m *MarshalerGetter) GetMarshalerByAlgorithm(algorithm Algorithm) (Marshaler, error) {
 	switch algorithm {
 	case RSA:
-		return NewRSAMarshaler(), nil
+		return m.rsaMarshaler, nil
 	case ECC:
-		return NewECCMarshaler(), nil
+		return m.eccMarshaler, nil
 	default:
 		return nil, errors.New("Algorithm is not supported!")
 	}

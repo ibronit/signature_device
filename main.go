@@ -14,7 +14,6 @@ import (
 
 const (
 	ListenAddress = ":8000"
-	// TODO: add further configuration parameters here ...
 )
 
 func main() {
@@ -22,9 +21,9 @@ func main() {
 	handler := slog.NewJSONHandler(os.Stdout, opts)
 	logger := slog.New(handler)
 	deviceRepository := device.NewDeviceRepository()
-	keyPairGeneratorGetter := crypto.GeneratorGetter{}
-	marshalerGetter := crypto.MarshalerGetter{}
-	signatureGetter := crypto.SignerGetter{}
+	keyPairGeneratorGetter := crypto.NewGeneratorGetter()
+	marshalerGetter := crypto.NewMarshalerGetter()
+	signatureGetter := crypto.NewSignerGetter()
 	deviceService := device.NewDeviceService(deviceRepository, keyPairGeneratorGetter, marshalerGetter, logger)
 	signatureService := signature.NewSignatureService(deviceRepository, marshalerGetter, signatureGetter, logger)
 

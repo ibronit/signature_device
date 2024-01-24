@@ -13,14 +13,23 @@ type Generator interface {
 	Generate() (interface{}, error)
 }
 
-type GeneratorGetter struct {}
+// Stores multiple implementations of the Generator interface.
+type GeneratorGetter struct {
+	rsaGenerator Generator
+	eccGenerator Generator
+}
 
+func NewGeneratorGetter() *GeneratorGetter {
+	return &GeneratorGetter{rsaGenerator: NewRsaGenerator(), eccGenerator: NewECCGenerator()}
+}
+
+// Return the correct generator if it's supported.
 func (m *GeneratorGetter) GetGeneratorByAlgorithm(algorithm Algorithm) (Generator, error) {
 	switch algorithm {
 	case RSA:
-		return NewRsaGenerator(), nil
+		return m.rsaGenerator, nil
 	case ECC:
-		return NewECCGenerator(), nil
+		return m.eccGenerator, nil
 	default:
 		return nil, errors.New("Algorithm is not supported!")
 	}

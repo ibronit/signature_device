@@ -16,9 +16,18 @@ type Signer interface {
 	CreateSignature(msg []byte, privateKey interface{}) ([]byte, error)
 }
 
-type SignerGetter struct{}
+// Stores multiple implementations of the Signer interface.
+type SignerGetter struct {
+	rsaSigner Signer
+	eccSigner Signer
+}
 
-func (m *SignerGetter) GetSignatureByAlgorithm(algorithm Algorithm) (Signer, error) {
+func NewSignerGetter() *SignerGetter {
+	return &SignerGetter{rsaSigner: &RSASigner{}, eccSigner: &ECCSigner{}}
+}
+
+// Gets the correct Signer if it's supported.
+func (m *SignerGetter) GetSignerByAlgorithm(algorithm Algorithm) (Signer, error) {
 	switch algorithm {
 	case RSA:
 		return &RSASigner{}, nil
@@ -29,9 +38,10 @@ func (m *SignerGetter) GetSignatureByAlgorithm(algorithm Algorithm) (Signer, err
 	}
 }
 
-// RSASigner creates signature for msg.
+// Creates RSA signature for the provided msg.
 type RSASigner struct{}
 
+// Creates RSA signature for the provided msg.
 func (ss *RSASigner) CreateSignature(msg []byte, keyPair interface{}) ([]byte, error) {
 	rsaKeyPair, ok := keyPair.(*RSAKeyPair)
 	if !ok {
@@ -53,8 +63,10 @@ func (ss *RSASigner) CreateSignature(msg []byte, keyPair interface{}) ([]byte, e
 	return signature, nil
 }
 
+// Creates ECC signature for the provided msg.
 type ECCSigner struct{}
 
+// Creates ECC signature for the provided msg.
 func (ss *ECCSigner) CreateSignature(msg []byte, keyPair interface{}) ([]byte, error) {
 	eccKeyPair, ok := keyPair.(*ECCKeyPair)
 	if !ok {
