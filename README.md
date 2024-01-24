@@ -38,7 +38,7 @@ curl --location 'localhost:8000/api/v1/signature' \
 
 | Package | Description |
 | ------ | ------ |
-| crypt | Utilities to deal with crpytography |
+| crypt | Utilities to deal with cryptography |
 | device | Signature device domain |
 | signature | Signature domain |
 | health | Contains health check handler |
