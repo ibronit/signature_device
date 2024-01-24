@@ -10,12 +10,12 @@ Demo application to create signature devices. With the created signature devices
 
 ### Start the app
 ```sh
-$ make run
+make run
 ```
 
 ### Run the tests
 ```sh
-$ make test
+make test
 ```
 
 ### Create signature device
@@ -24,6 +24,12 @@ $ make test
 curl --location 'localhost:8000/api/v1/device' \
 --header 'Content-Type: text/plain' \
 --data '{"id": "bc890106-641e-41fc-aed8-b77cca0b42b9", "algorithm": "RSA", "label": "NEW"}'
+```
+
+### List signature devices
+
+```sh
+curl --location 'localhost:8000/api/v1/device'
 ```
 
 ### Sign data

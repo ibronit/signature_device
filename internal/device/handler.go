@@ -22,12 +22,42 @@ func NewDeviceHandler(deviceService DeviceService, logger *slog.Logger) *deviceH
 }
 
 func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method == http.MethodPost {
+		h.createSignatureDevice(w, r)
+		return
+	} else if r.Method == http.MethodGet {
+		h.listSignatureDevices(w, r)
+	} else {
 		api.MethodNotAllowed(w, r)
 		return
 	}
+}
 
-	var deviceRequest DeviceRequest
+func (h *deviceHandler) listSignatureDevices(w http.ResponseWriter, r *http.Request) {
+	var response DeviceListResponse
+	for _, device := range h.deviceService.GetAllDevices() {
+		responseElem := DeviceListResponseElement{
+			Id:      device.Uuid,
+			Label:   device.Label,
+			Counter: device.Counter,
+		}
+		response.Elems = append(response.Elems, responseElem)
+	}
+	api.WriteAPIResponse(w, 200, response)
+}
+
+type DeviceListResponseElement struct {
+	Id      uuid.UUID `json:"id"`
+	Label   string    `json:"label"`
+	Counter int       `json:"counter"`
+}
+
+type DeviceListResponse struct {
+	Elems []DeviceListResponseElement `json:"elems"`
+}
+
+func (h *deviceHandler) createSignatureDevice(w http.ResponseWriter, r *http.Request) {
+	var deviceRequest CreateDeviceRequest
 	if err := json.NewDecoder(r.Body).Decode(&deviceRequest); err != nil {
 		h.logger.Error("Error during deserializing json body", "error", err)
 		api.WriteErrorResponse(w, 400, []string{"Couldn't serialize the payload"})
@@ -48,16 +78,16 @@ func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteAPIResponse(w, 201, DeviceResponse{Id: uuid})
+	api.WriteAPIResponse(w, 201, CreateDeviceResponse{Id: uuid})
 }
 
-type DeviceRequest struct {
+type CreateDeviceRequest struct {
 	Id        uuid.UUID `json:"id" validate:"required,uuid"`
 	Algorithm Algorithm `json:"algorithm" validate:"required"`
 	Label     string    `json:"label,omitempty"`
 }
 
-type DeviceResponse struct {
+type CreateDeviceResponse struct {
 	Id uuid.UUID `json:"id"`
 }
 
