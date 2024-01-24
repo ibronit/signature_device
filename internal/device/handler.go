@@ -48,7 +48,7 @@ func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteAPIResponse(w, 201, uuid)
+	api.WriteAPIResponse(w, 201, DeviceResponse{Id: uuid})
 }
 
 func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +60,10 @@ type DeviceRequest struct {
 	Id        uuid.UUID `json:"id" validate:"required,uuid"`
 	Algorithm Algorithm `json:"algorithm" validate:"required"`
 	Label     string    `json:"label,omitempty"`
+}
+
+type DeviceResponse struct {
+	Id uuid.UUID `json:"id"`
 }
 
 func (algorithm *Algorithm) UnmarshalJSON(b []byte) error {
