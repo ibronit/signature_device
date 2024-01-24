@@ -6,12 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type Algorithm int
+type Algorithm uint
 
 const (
-	RSA Algorithm = iota
+	RSA Algorithm = iota + 1
 	ECC
-	UNKNOWN
 )
 
 type DeviceEntity struct {

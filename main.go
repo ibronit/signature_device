@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"log/slog"
 	"net/http"
@@ -23,10 +22,11 @@ func main() {
 	handler := slog.NewJSONHandler(os.Stdout, opts)
 	logger := slog.New(handler)
 	deviceRepository := device.NewDeviceRepository()
-	rsaGenerator := crypto.RSAGenerator{}
-	rsaMarshaler := crypto.NewRSAMarshaler()
-	deviceService := device.NewDeviceService(deviceRepository, rsaGenerator, rsaMarshaler, logger)
-	signature.NewSignatureService(deviceRepository, rsaMarshaler)
+	keyPairGeneratorGetter := crypto.GeneratorGetter{}
+	marshalerGetter := crypto.MarshalerGetter{}
+	signatureGetter := crypto.SignerGetter{}
+	deviceService := device.NewDeviceService(deviceRepository, keyPairGeneratorGetter, marshalerGetter, logger)
+	signature.NewSignatureService(deviceRepository, marshalerGetter, signatureGetter, logger)
 
 	mux := http.NewServeMux()
 

@@ -12,22 +12,22 @@ type DeviceService interface {
 }
 
 type deviceService struct {
-	repository   DeviceRepository
-	rsaGenerator fiskalycrypto.RSAGenerator
-	rsaMarshaler fiskalycrypto.RSAMarshaler
-	logger       *slog.Logger
+	repository      DeviceRepository
+	generatorGetter fiskalycrypto.GeneratorGetter
+	marshalerGetter fiskalycrypto.MarshalerGetter
+	logger          *slog.Logger
 }
 
 func NewDeviceService(
 	repository DeviceRepository,
-	rsaGenerator fiskalycrypto.RSAGenerator,
-	rsaMarshaler fiskalycrypto.RSAMarshaler,
+	generatorGetter fiskalycrypto.GeneratorGetter,
+	marshalerGetter fiskalycrypto.MarshalerGetter,
 	logger *slog.Logger) DeviceService {
 	return &deviceService{
-		repository:   repository,
-		rsaGenerator: rsaGenerator,
-		rsaMarshaler: rsaMarshaler,
-		logger:       logger,
+		repository:      repository,
+		generatorGetter: generatorGetter,
+		marshalerGetter: marshalerGetter,
+		logger:          logger,
 	}
 }
 
@@ -38,14 +38,9 @@ func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm Algorit
 		Label:     label,
 	}
 
-	keyPair, err := ds.rsaGenerator.Generate()
+	publicKey, privateKey, err := ds.generateKeyPairByAlgorithm(algorithm)
 	if err != nil {
-		ds.logger.Error("Couldn't generate keypair", "error", err)
-		return uuid, err
-	}
-	publicKey, privateKey, err := ds.rsaMarshaler.Marshal(*keyPair)
-	if err != nil {
-		ds.logger.Error("Couldn't marshal keypair", "error", err)
+		ds.logger.Error("Couldn't generate keypair with algortihm", "error", err, "algorithm", algorithm)
 		return uuid, err
 	}
 	entity.PrivateKey = privateKey
@@ -53,4 +48,30 @@ func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm Algorit
 
 	ds.repository.Save(entity)
 	return uuid, nil
+}
+
+func (ds *deviceService) generateKeyPairByAlgorithm(algorithm Algorithm) ([]byte, []byte, error) {
+	generator, err := ds.generatorGetter.GetGeneratorByAlgorithm(fiskalycrypto.Algorithm(algorithm))
+	if err != nil {
+		ds.logger.Error("Couldn't get the right key-pair generator", "error", err)
+	}
+
+	keyPair, err := generator.Generate()
+	if err != nil {
+		ds.logger.Error("Couldn't generate keypair", "error", err)
+		return nil, nil, err
+	}
+
+	marshaler, err := ds.marshalerGetter.GetMarshalerByAlgorithm(fiskalycrypto.Algorithm(algorithm))
+	if err != nil {
+		ds.logger.Error("Couldn't get the right marshaler", "error", err)
+	}
+
+	publicKey, privateKey, err := marshaler.Marshal(keyPair)
+	if err != nil {
+		ds.logger.Error("Couldn't marshal keypair", "error", err)
+		return nil, nil, err
+	}
+
+	return publicKey, privateKey, nil
 }

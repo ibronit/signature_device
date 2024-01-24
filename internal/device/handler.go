@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/api"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -33,10 +34,18 @@ func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := validator.New().Struct(deviceRequest)
+	if err != nil {
+		h.logger.Error("Validation failed", "error", err)
+		api.WriteErrorResponse(w, 400, []string{"Provided json payload is not valid", err.Error()})
+		return
+	}
+
 	uuid, err := h.deviceService.CreateSignatureDevice(deviceRequest.Id, deviceRequest.Algorithm, deviceRequest.Label)
 	if err != nil {
 		h.logger.Error("Couldn't create the signature device", "error", err)
 		api.WriteInternalError(w)
+		return
 	}
 
 	api.WriteAPIResponse(w, 201, uuid)
@@ -48,8 +57,8 @@ func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 }
 
 type DeviceRequest struct {
-	Id        uuid.UUID `json:"id"`
-	Algorithm Algorithm `json:"algorithm"`
+	Id        uuid.UUID `json:"id" validate:"required,uuid"`
+	Algorithm Algorithm `json:"algorithm" validate:"required"`
 	Label     string    `json:"label,omitempty"`
 }
 
