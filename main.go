@@ -36,6 +36,7 @@ func main() {
 	mux.Handle("/api/v1/device", deviceHandler)
 	mux.Handle("/api/v1/signature", signatureHandler)
 
+	logger.Info("Server is listening on port", "port", ListenAddress)
 	err := http.ListenAndServe(ListenAddress, mux)
 	if err != nil {
 		log.Fatal("Could not start server on ", ListenAddress)
