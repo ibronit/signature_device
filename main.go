@@ -26,14 +26,16 @@ func main() {
 	marshalerGetter := crypto.MarshalerGetter{}
 	signatureGetter := crypto.SignerGetter{}
 	deviceService := device.NewDeviceService(deviceRepository, keyPairGeneratorGetter, marshalerGetter, logger)
-	signature.NewSignatureService(deviceRepository, marshalerGetter, signatureGetter, logger)
+	signatureService := signature.NewSignatureService(deviceRepository, marshalerGetter, signatureGetter, logger)
 
 	mux := http.NewServeMux()
 
 	healthHandler := health.HealthHandler{}
 	deviceHandler := device.NewDeviceHandler(deviceService, logger)
+	signatureHandler := signature.NewSignatureHandler(signatureService, logger)
 	mux.Handle("/api/v0/health", &healthHandler)
 	mux.Handle("/api/v1/device", deviceHandler)
+	mux.Handle("/api/v1/signature", signatureHandler)
 
 	err := http.ListenAndServe(ListenAddress, mux)
 	if err != nil {

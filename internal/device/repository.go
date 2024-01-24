@@ -4,14 +4,13 @@ import (
 	"errors"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 )
 
 type DeviceRepository interface {
 	Save(entity DeviceEntity)
-	Update(entity DeviceEntity)
+	Update(id uuid.UUID, lastSignature string) (DeviceEntity, error)
 	FindById(id uuid.UUID) (DeviceEntity, error)
 }
 
@@ -33,23 +32,25 @@ func (repo *deviceRepository) Save(entity DeviceEntity) {
 		return
 	}
 
-	entity.Counter = 1
-	entity.LastSignature = time.Now()
+	entity.Counter = 0
+	entity.LastSignature = ""
 	repo.entities[entity.Uuid] = entity
 }
 
-func (repo *deviceRepository) Update(entity DeviceEntity) {
+func (repo *deviceRepository) Update(id uuid.UUID, lastSignature string) (DeviceEntity, error) {
 	repo.Lock()
 	defer repo.Unlock()
-	existingEntity, exists := repo.entities[entity.Uuid]
+	existingEntity, exists := repo.entities[id]
 	if !exists {
-		slog.Error("Entity doesn't exist! Entity cannot be updated!", "id", entity.Uuid)
-		return
+		slog.Error("Entity doesn't exist! Entity cannot be updated!", "id", id)
+		return existingEntity, errors.New("Entity doesn't exist")
 	}
 
 	existingEntity.Counter++
-	existingEntity.LastSignature = time.Now()
-	repo.entities[entity.Uuid] = existingEntity
+	existingEntity.LastSignature = lastSignature
+	repo.entities[id] = existingEntity
+
+	return existingEntity, nil
 }
 
 func (repo *deviceRepository) FindById(id uuid.UUID) (DeviceEntity, error) {

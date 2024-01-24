@@ -6,10 +6,11 @@ import (
 
 	fiskalycrypto "github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/device"
+	"github.com/google/uuid"
 )
 
 type SignatureService interface {
-	SignData(request SignatureRequest) (SignatureResponse, error)
+	SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error)
 }
 
 type signatureService struct {
@@ -27,42 +28,56 @@ func NewSignatureService(
 	return &signatureService{deviceRepository: deviceRepository, marshalerGetter: marshalerGetter, signerGetter: signerGetter, logger: logger}
 }
 
-func (ss *signatureService) SignData(request SignatureRequest) (SignatureResponse, error) {
-	device, err := ss.deviceRepository.FindById(request.DeviceId)
+func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error) {
+	device, err := ss.deviceRepository.FindById(deviceId)
 	if err != nil {
-		ss.logger.Error("Couldn't find the signature device by uuid", "uuid", request.DeviceId)
-		return SignatureResponse{}, err
+		ss.logger.Error("Couldn't find the signature device by uuid", "uuid", deviceId)
+		return device, "", "", err
 	}
 
 	marshaler, err := ss.marshalerGetter.GetMarshalerByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
 	if err != nil {
 		ss.logger.Error("Couldn't get the right marshaler", "error", err)
-		return SignatureResponse{}, err
+		return device, "", "", err
 	}
 
 	keyPair, err := marshaler.Unmarshal(device.PrivateKey)
 	if err != nil {
 		ss.logger.Error("Couldn't unmarshal the key-pair", "error", err)
-		return SignatureResponse{}, err
+		return device, "", "", err
 	}
 
 	signer, err := ss.signerGetter.GetSignatureByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
 	if err != nil {
 		ss.logger.Error("Couldn't get the right marshaler", "error", err)
-		return SignatureResponse{}, err
+		return device, "", "", err
 	}
 
-	dataByte := []byte(request.DataToBeSigned)
+	dataByte := []byte(dataToBeSigned)
 	signature, err := signer.CreateSignature(dataByte, keyPair)
 	if err != nil {
 		ss.logger.Error("Couldn't create the signature", "error", err)
-		return SignatureResponse{}, err
+		return device, "", "", err
 	}
-	ss.deviceRepository.Update(device)
+	base64Signature := base64.StdEncoding.EncodeToString(signature)
+	updatedDevice, err := ss.deviceRepository.Update(deviceId, base64Signature)
+	if err != nil {
+		ss.logger.Error("Couldn't update the signature device", "error", err)
+		return device, "", "", err
+	}
+	var lastSignature string
+	if device.Counter == 0 {
+		binaryUuid, err := deviceId.MarshalBinary()
+		if err != nil {
+			ss.logger.Error("Couldn't marshal uuid to binary", "error", err)
+			return device, "", "", err
+		}
+		lastSignature = base64.StdEncoding.EncodeToString(binaryUuid)
+	} else {
+		lastSignature = device.LastSignature
+	}
 
-	response := SignatureResponse{Signature: base64.StdEncoding.EncodeToString(signature)}
-
-	return response, nil
+	return updatedDevice, lastSignature, base64Signature, nil
 }
 
 // func (ss *signatureService) createSignature(msg []byte, privateKey *rsa.PrivateKey) []byte {

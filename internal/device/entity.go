@@ -1,8 +1,6 @@
 package device
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -18,7 +16,7 @@ type DeviceEntity struct {
 	Algorithm     Algorithm
 	Label         string
 	Counter       int
-	LastSignature time.Time
+	LastSignature string
 	PrivateKey    []byte
 	PublicKey     []byte
 }

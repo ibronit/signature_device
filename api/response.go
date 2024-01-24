@@ -15,6 +15,11 @@ type ErrorResponse struct {
 	Errors []string `json:"errors"`
 }
 
+func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	w.Write([]byte("405 Method not allowed"))
+}
+
 // WriteInternalError writes a default internal error message as an HTTP response.
 func WriteInternalError(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)

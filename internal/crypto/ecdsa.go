@@ -24,7 +24,7 @@ func NewECCMarshaler() Marshaler {
 // Encode takes an ECCKeyPair and encodes it to be written on disk.
 // It returns the public and the private key as a byte slice.
 func (m ECCMarshaler) Marshal(keyPair interface{}) ([]byte, []byte, error) {
-	eccKeyPair, ok := keyPair.(ECCKeyPair)
+	eccKeyPair, ok := keyPair.(*ECCKeyPair)
 	if !ok {
 		return nil, nil, errors.New("Keypair type is not supported!")
 	}
@@ -33,7 +33,7 @@ func (m ECCMarshaler) Marshal(keyPair interface{}) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&eccKeyPair.Public)
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(eccKeyPair.Public)
 	if err != nil {
 		return nil, nil, err
 	}

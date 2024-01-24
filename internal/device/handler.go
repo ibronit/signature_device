@@ -23,7 +23,7 @@ func NewDeviceHandler(deviceService DeviceService, logger *slog.Logger) *deviceH
 
 func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		MethodNotAllowed(w, r)
+		api.MethodNotAllowed(w, r)
 		return
 	}
 
@@ -49,11 +49,6 @@ func (h *deviceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteAPIResponse(w, 201, DeviceResponse{Id: uuid})
-}
-
-func MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	w.Write([]byte("405 Method not allowed"))
 }
 
 type DeviceRequest struct {

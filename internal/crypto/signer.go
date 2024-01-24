@@ -30,7 +30,7 @@ func (m *SignerGetter) GetSignatureByAlgorithm(algorithm Algorithm) (Signer, err
 type RSASigner struct{}
 
 func (ss *RSASigner) CreateSignature(msg []byte, keyPair interface{}) ([]byte, error) {
-	rsaKeyPair, ok := keyPair.(RSAKeyPair)
+	rsaKeyPair, ok := keyPair.(*RSAKeyPair)
 	if !ok {
 		return nil, errors.New("Keypair type is not supported!")
 	}
