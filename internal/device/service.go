@@ -4,11 +4,12 @@ import (
 	"log/slog"
 
 	fiskalycrypto "github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 	"github.com/google/uuid"
 )
 
 type DeviceService interface {
-	CreateSignatureDevice(uuid uuid.UUID, algorithm Algorithm, label string) (uuid.UUID, error)
+	CreateSignatureDevice(uuid uuid.UUID, algorithm enum.Algorithm, label string) (uuid.UUID, error)
 	GetAllDevices() map[uuid.UUID]DeviceEntity
 }
 
@@ -32,8 +33,8 @@ func NewDeviceService(
 	}
 }
 
-// Creates signature device and saves the signature device into memory
-func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm Algorithm, label string) (uuid.UUID, error) {
+// CreateSignatureDevice creates signature device and saves the signature device into memory
+func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm enum.Algorithm, label string) (uuid.UUID, error) {
 	entity := DeviceEntity{
 		Uuid:      uuid,
 		Algorithm: algorithm,
@@ -52,8 +53,8 @@ func (ds *deviceService) CreateSignatureDevice(uuid uuid.UUID, algorithm Algorit
 	return uuid, nil
 }
 
-func (ds *deviceService) generateKeyPairByAlgorithm(algorithm Algorithm) ([]byte, []byte, error) {
-	generator, err := ds.generatorGetter.GetGeneratorByAlgorithm(fiskalycrypto.Algorithm(algorithm))
+func (ds *deviceService) generateKeyPairByAlgorithm(algorithm enum.Algorithm) ([]byte, []byte, error) {
+	generator, err := ds.generatorGetter.GetGeneratorByAlgorithm(algorithm)
 	if err != nil {
 		ds.logger.Error("Couldn't get the right key-pair generator", "error", err)
 	}
@@ -64,7 +65,7 @@ func (ds *deviceService) generateKeyPairByAlgorithm(algorithm Algorithm) ([]byte
 		return nil, nil, err
 	}
 
-	marshaler, err := ds.marshalerGetter.GetMarshalerByAlgorithm(fiskalycrypto.Algorithm(algorithm))
+	marshaler, err := ds.marshalerGetter.GetMarshalerByAlgorithm(algorithm)
 	if err != nil {
 		ds.logger.Error("Couldn't get the right marshaler", "error", err)
 	}
@@ -78,7 +79,7 @@ func (ds *deviceService) generateKeyPairByAlgorithm(algorithm Algorithm) ([]byte
 	return publicKey, privateKey, nil
 }
 
-// Gets every previously saved signature devices.
+// GetAllDevices gets every previously saved signature devices.
 func (ds *deviceService) GetAllDevices() map[uuid.UUID]DeviceEntity {
 	return ds.repository.FindAll()
 }

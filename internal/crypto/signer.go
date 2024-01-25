@@ -9,6 +9,8 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 )
 
 // Signer can generate keypairs.
@@ -27,11 +29,11 @@ func NewSignerGetter() *SignerGetter {
 }
 
 // Gets the correct Signer if it's supported.
-func (m *SignerGetter) GetSignerByAlgorithm(algorithm Algorithm) (Signer, error) {
+func (m *SignerGetter) GetSignerByAlgorithm(algorithm enum.Algorithm) (Signer, error) {
 	switch algorithm {
-	case RSA:
+	case enum.RSA:
 		return &RSASigner{}, nil
-	case ECC:
+	case enum.ECC:
 		return &ECCSigner{}, nil
 	default:
 		return nil, errors.New("Algorithm is not supported!")

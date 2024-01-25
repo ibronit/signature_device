@@ -6,6 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"errors"
+
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 )
 
 // Generator can generate keypairs.
@@ -24,11 +26,11 @@ func NewGeneratorGetter() *GeneratorGetter {
 }
 
 // Return the correct generator if it's supported.
-func (m *GeneratorGetter) GetGeneratorByAlgorithm(algorithm Algorithm) (Generator, error) {
+func (m *GeneratorGetter) GetGeneratorByAlgorithm(algorithm enum.Algorithm) (Generator, error) {
 	switch algorithm {
-	case RSA:
+	case enum.RSA:
 		return m.rsaGenerator, nil
-	case ECC:
+	case enum.ECC:
 		return m.eccGenerator, nil
 	default:
 		return nil, errors.New("Algorithm is not supported!")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/device"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ func TestSignData(t *testing.T) {
 
 	// Create test signature device
 	testUUID := uuid.New()
-	testAlgorithm := device.ECC
+	testAlgorithm := enum.ECC
 	testLabel := "TestLabel"
 
 	_, err := deviceService.CreateSignatureDevice(testUUID, testAlgorithm, testLabel)

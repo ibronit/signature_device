@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 	"github.com/google/uuid"
 )
 
@@ -19,7 +20,7 @@ func TestCreateSignatureDevice(t *testing.T) {
 	deviceService := NewDeviceService(deviceRepository, keyPairGeneratorGetter, marshalerGetter, logger)
 
 	testUUID := uuid.New()
-	testAlgorithm := RSA
+	testAlgorithm := enum.RSA
 	testLabel := "TestLabel"
 
 	uuid, err := deviceService.CreateSignatureDevice(testUUID, testAlgorithm, testLabel)

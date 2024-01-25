@@ -1,6 +1,10 @@
 package crypto
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
+)
 
 // Marshaler can encode and decode an RSA key pair.
 type Marshaler interface {
@@ -19,11 +23,11 @@ func NewMarshalerGetter() *MarshalerGetter {
 }
 
 // Gets the correct marshaler if it's supported.
-func (m *MarshalerGetter) GetMarshalerByAlgorithm(algorithm Algorithm) (Marshaler, error) {
+func (m *MarshalerGetter) GetMarshalerByAlgorithm(algorithm enum.Algorithm) (Marshaler, error) {
 	switch algorithm {
-	case RSA:
+	case enum.RSA:
 		return m.rsaMarshaler, nil
-	case ECC:
+	case enum.ECC:
 		return m.eccMarshaler, nil
 	default:
 		return nil, errors.New("Algorithm is not supported!")

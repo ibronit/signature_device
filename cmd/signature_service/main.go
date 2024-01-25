@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/api"
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/crypto"
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/device"
-	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/health"
+
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/signature"
 )
 
@@ -29,9 +30,9 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	healthHandler := health.HealthHandler{}
-	deviceHandler := device.NewDeviceHandler(deviceService, logger)
-	signatureHandler := signature.NewSignatureHandler(signatureService, logger)
+	healthHandler := api.HealthHandler{}
+	deviceHandler := api.NewDeviceHandler(deviceService, logger)
+	signatureHandler := api.NewSignatureHandler(signatureService, logger)
 	mux.Handle("/api/v0/health", &healthHandler)
 	mux.Handle("/api/v1/device", deviceHandler)
 	mux.Handle("/api/v1/signature", signatureHandler)

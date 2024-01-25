@@ -1,19 +1,13 @@
 package device
 
 import (
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/enum"
 	"github.com/google/uuid"
-)
-
-type Algorithm uint
-
-const (
-	RSA Algorithm = iota + 1
-	ECC
 )
 
 type DeviceEntity struct {
 	Uuid          uuid.UUID
-	Algorithm     Algorithm
+	Algorithm     enum.Algorithm
 	Label         string
 	Counter       int
 	LastSignature string

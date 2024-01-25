@@ -1,4 +1,4 @@
-package signature
+package api
 
 import (
 	"encoding/json"
@@ -6,49 +6,49 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/fiskaly/coding-challenges/signing-service-challenge/api"
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/signature"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type signatureHandler struct {
-	signatureService SignatureService
+	signatureService signature.SignatureService
 	logger           *slog.Logger
 }
 
-func NewSignatureHandler(signatureService SignatureService, logger *slog.Logger) *signatureHandler {
+func NewSignatureHandler(signatureService signature.SignatureService, logger *slog.Logger) *signatureHandler {
 	return &signatureHandler{signatureService: signatureService, logger: logger}
 }
 
 func (h *signatureHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		api.MethodNotAllowed(w, r)
+		MethodNotAllowed(w, r)
 		return
 	}
 
 	var signatureRequest SignatureRequest
 	if err := json.NewDecoder(r.Body).Decode(&signatureRequest); err != nil {
 		h.logger.Error("Error during deserializing json body", "error", err)
-		api.WriteErrorResponse(w, 400, []string{"Couldn't serialize the payload"})
+		WriteErrorResponse(w, http.StatusBadRequest, []string{"Couldn't serialize the payload"})
 		return
 	}
 
 	err := validator.New().Struct(signatureRequest)
 	if err != nil {
 		h.logger.Error("Validation failed", "error", err)
-		api.WriteErrorResponse(w, 400, []string{"Provided json payload is not valid", err.Error()})
+		WriteErrorResponse(w, http.StatusBadRequest, []string{"Provided json payload is not valid", err.Error()})
 		return
 	}
 
 	device, lastSignature, signature, err := h.signatureService.SignData(signatureRequest.DeviceId, signatureRequest.DataToBeSigned)
 	if err != nil {
 		h.logger.Error("Couldn't create signature", "error", err)
-		api.WriteInternalError(w)
+		WriteInternalError(w)
 		return
 	}
 
 	signatureData := fmt.Sprintf("%v_%v_%v", device.Counter, signatureRequest.DataToBeSigned, lastSignature)
-	api.WriteAPIResponse(w, 201, SignatureResponse{Signature: signature, SignatureData: signatureData})
+	WriteAPIResponse(w, http.StatusCreated, SignatureResponse{Signature: signature, SignatureData: signatureData})
 }
 
 type SignatureRequest struct {

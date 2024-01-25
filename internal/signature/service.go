@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Signature service covers the business logic of signatures
+// SignatureService covers the business logic of signatures
 type SignatureService interface {
 	SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error)
 }
@@ -29,7 +29,7 @@ func NewSignatureService(
 	return &signatureService{deviceRepository: deviceRepository, marshalerGetter: marshalerGetter, signerGetter: signerGetter, logger: logger}
 }
 
-// Signs data with the provided signature device.
+// SignData signs data with the provided signature device.
 func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) (device.DeviceEntity, string, string, error) {
 	device, err := ss.deviceRepository.FindById(deviceId)
 	if err != nil {
@@ -37,7 +37,7 @@ func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) 
 		return device, "", "", err
 	}
 
-	marshaler, err := ss.marshalerGetter.GetMarshalerByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
+	marshaler, err := ss.marshalerGetter.GetMarshalerByAlgorithm(device.Algorithm)
 	if err != nil {
 		ss.logger.Error("Couldn't get the right marshaler", "error", err)
 		return device, "", "", err
@@ -49,7 +49,7 @@ func (ss *signatureService) SignData(deviceId uuid.UUID, dataToBeSigned string) 
 		return device, "", "", err
 	}
 
-	signer, err := ss.signerGetter.GetSignerByAlgorithm(fiskalycrypto.Algorithm(device.Algorithm))
+	signer, err := ss.signerGetter.GetSignerByAlgorithm(device.Algorithm)
 	if err != nil {
 		ss.logger.Error("Couldn't get the right marshaler", "error", err)
 		return device, "", "", err
